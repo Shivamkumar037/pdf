@@ -237,10 +237,11 @@ body{
       
       <!-- IMAGE → PDF -->
       <section id="tool-images2pdf" class="tool-card">
+        <label for="img-files-input">
         <div id="results" >
         <img src="imgtopdf.png" class="imgdim" alt="">
       </div>
-
+</label>
         <h3>Image → PDF</h3>
 
         <p>Select images, reorder, convert.</p>
@@ -257,12 +258,28 @@ body{
 
       <!-- BACKGROUND -->
       <section id="tool-pdf-bg" class="tool-card hidden">
+        <label for="pdf-bg-input">
         <div id="results" >
         <img src="background change.png" class="imgdim" alt="">
-      </div>
+      </div> </label>
 
         <h3>Change PDF Background</h3>
         <input id="pdf-bg-input" type="file" accept="application/pdf">
+        <h3>
+             <label>
+    <input type="radio" name="bg-color" value="white"  />
+    White
+  </label>
+  <label>
+    <input type="radio" name="bg-color" value="black" />
+    Black
+  </label>
+  <label>
+    <input type="radio" name="bg-color" value="yellow" />
+    Yellow
+  </label>
+
+        </h3>
         <br><br>
         <button id="btn-change-bg" class="btn primary">Apply Background</button>
       </section>
@@ -279,10 +296,11 @@ body{
 
       <!-- MERGE -->
       <section id="tool-merge" class="tool-card hidden">
+        <label for="pdf-merge-input">
         <div id="results" >
         <img src="pdftopdf.png" class="imgdim" alt="">
       </div>
-
+</label>
         <h3>Merge PDFs</h3>
         <input  id="pdf-merge-input" type="file" multiple accept="application/pdf">
         <br><br>
@@ -291,6 +309,7 @@ body{
 
       <!-- TEXT → PDF -->
       <section id="tool-text2pdf" class="tool-card hidden">
+        
         <div id="results" >
         <img src="texttopdf.png" class="imgdim" alt="">
       </div>
@@ -303,9 +322,10 @@ body{
 
       <!-- PDF → PAGES -->
       <section id="tool-pdf2pages" class="tool-card hidden">
+        <label for="pdf2pages-input">
         <div id="results" >
         <img src="pdftoimg.png" class="imgdim" alt="">
-      </div>
+      </div></label>
 
         <h3>PDF → Pages</h3>
         <input id="pdf2pages-input" type="file" accept="application/pdf">
