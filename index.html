@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PDF Toolkit — Image ↔ PDF • Edit • Merge • Split • Convert</title>
+<meta name="description" content="Web tool with 6 options: images→pdf, change pdf bg color, delete pdf pages, merge pdfs, text→pdf, pdf→pages. HTML + CSS UI ready for JS integration." />
+
+<!-- =====================================================
+     Styles: Detailed, professional, responsive layout,
+     many utility classes and component styles to be used
+     by the JS later. This CSS is intentionally verbose
+     to match the user's request for a large, detailed file.
+     ===================================================== -->
+<style>
+/* Reset / base */
+:root{
+  --bg:#0f1724;
+  --card:#0b1220;
+  --muted:#98a0b3;
+  --accent:#6ee7b7;
+  --accent-2:#60a5fa;
+  --danger:#ff7b7b;
+  --glass: rgba(255,255,255,0.04);
+  --glass-2: rgba(255,255,255,0.02);
+  --glass-border: rgba(255,255,255,0.06);
+  --max-width:1200px;
+  --radius-1:12px;
+  --radius-2:20px;
+  --shadow-1: 0 6px 18px rgba(2,6,23,0.6);
+  --shadow-2: 0 10px 30px rgba(2,6,23,0.7);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --ui-font-size:16px;
+}
+*{box-sizing:border-box}
+html,body{
+  height:100%;
+  margin:0;
+  background: linear-gradient(180deg, #071023 0%, #08121b 40%, #081421 100%);
+  color:#e6eef8;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-size:var(--ui-font-size);
+  line-height:1.45;
+}
+
+/* Page container */
+.page {
+  max-width: var(--max-width);
+  margin: 28px auto;
+  padding: 28px;
+  border-radius: var(--radius-2);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  box-shadow: var(--shadow-1);
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* Header */
+.header {
+  display:flex;
+  gap:18px;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.brand {
+  display:flex;
+  gap:14px;
+  align-items:center;
+}
+.logo {
+  width:56px;
+  height:56px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  color:#021024;
+  font-weight:700;
+  font-size:20px;
+  box-shadow: 0 6px 18px rgba(96,165,250,0.12);
+}
+.brand h1{
+  margin:0;
+  font-size:20px;
+  letter-spacing:0.2px;
+}
+.brand p{
+  margin:0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* Navigation / options */
+.nav {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.btn {
+  appearance:none;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--accent);
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  transition:all .18s ease;
+}
+.btn:hover{ transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+.btn.secondary {
+  color:var(--muted);
+  border:1px solid rgba(255,255,255,0.03);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+}
+.btn.primary {
+  color:#021024;
+  background: linear-gradient(90deg,var(--accent),var(--accent-2));
+  border:none;
+  box-shadow: 0 8px 30px rgba(96,165,250,0.08);
+}
+
+/* Layout grid */
+.layout {
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  gap:20px;
+  align-items:start;
+}
+
+/* Sidebar menu */
+.sidebar {
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01));
+  border-radius:14px;
+  padding:18px;
+  border:1px solid rgba(255,255,255,0.02);
+  position:sticky;
+  top:28px;
+  height:calc(100vh - 112px);
+  overflow:auto;
+}
+.menu-title{
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.menu {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.menu a.menu-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  border-radius:10px;
+  text-decoration:none;
+  color:inherit;
+  border:1px solid transparent;
+  transition:all .14s ease;
+}
+.menu a.menu-item:hover{
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.015));
+  border:1px solid rgba(255,255,255,0.02);
+  transform:translateX(6px);
+}
+.menu-item .icon {
+  width:36px; height:36px; border-radius:9px;
+  display:grid; place-items:center;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.02);
+  font-weight:700;
+  color:var(--accent);
+}
+.menu-item .meta{
+  display:flex; flex-direction:column;
+}
+.menu-item .meta .title{ font-size:14px; font-weight:700; margin-bottom:2px; }
+.menu-item .meta .desc{ font-size:12px; color:var(--muted); }
+
+/* Content area */
+.content {
+  min-height:600px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+  padding:18px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.02);
+}
+
+/* Page header inside content */
+.section-header {
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  margin-bottom:12px;
+}
+.section-title { font-size:18px; margin:0; }
+.section-sub { font-size:13px; color:var(--muted); margin:0; }
+
+/* Card component */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+  border-radius:12px;
+  padding:16px;
+  border:1px solid rgba(255,255,255,0.02);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+  margin-bottom:14px;
+}
+
+/* File drop area */
+.dropzone{
+  border: 1.5px dashed rgba(255,255,255,0.04);
+  padding:22px;
+  border-radius:12px;
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+  transition: all .15s ease;
+}
+.dropzone.dragover{
+  background:linear-gradient(90deg, rgba(96,165,250,0.06), rgba(110,231,183,0.04));
+  border-color: rgba(96,165,250,0.28);
+  transform: translateY(-4px);
+}
+.drop-left{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.drop-left .h{ font-weight:700; font-size:15px; }
+.drop-left .p{ color:var(--muted); font-size:13px; max-width:520px; }
+
+/* preview thumbnails */
+.thumbs {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  overflow:auto;
+  padding-top:8px;
+}
+.thumb {
+  width:86px; height:108px; border-radius:8px; overflow:hidden;
+  border:1px solid rgba(255,255,255,0.03);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.thumb .meta {
+  position:absolute; left:6px; bottom:6px; font-size:11px; color:#021024; background:#ffffffaa; padding:4px 6px; border-radius:8px;
+}
+
+/* Forms */
+.form-row { display:flex; gap:12px; align-items:center; }
+.input, textarea, select {
+  background: rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.03);
+  padding:10px 12px;
+  border-radius:10px;
+  color:inherit;
+  min-height:44px;
+  font-size:14px;
+}
+.input.small { min-height:36px; padding:8px 10px; font-size:13px; }
+.label { font-size:13px; color:var(--muted); margin-bottom:6px; display:block; }
+
+/* Options grid for tools */
+.tools-grid {
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:14px;
+  margin-top:12px;
+}
+@media (max-width:980px){
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position:relative; height:auto; }
+  .tools-grid { grid-template-columns: 1fr; }
+}
+
+/* Tool card specifics */
+.tool-card {
+  padding:14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+}
+.tool-card h3 { margin:0 0 6px 0; }
+.tool-card p { margin:0; color:var(--muted); font-size:13px; }
+
+/* color palette for background change */
+.color-palette { display:flex; gap:8px; margin-top:10px; align-items:center; }
+.color-swatch {
+  width:44px; height:44px; border-radius:9px; cursor:pointer;
+  border:2px solid rgba(255,255,255,0.02);
+  display:grid; place-items:center; font-size:12px; font-weight:700;
+}
+.color-swatch[data-color="white"]{ background:#ffffff; color:#021024; }
+.color-swatch[data-color="black"]{ background:#000000; color:#fff; }
+.color-swatch[data-color="light"]{ background: linear-gradient(90deg,#f5f7fb,#e9eef9); color:#021024; }
+.color-swatch[data-color="sepia"]{ background:#f4e6d6; color:#24180f; }
+.color-swatch[data-color="blue"]{ background:linear-gradient(90deg,#60a5fa,#3b82f6); color:#021024; }
+
+/* Page list UI (for delete pages) */
+.page-list {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:12px;
+  max-height:240px;
+  overflow:auto;
+}
+.page-item {
+  display:flex; gap:12px; align-items:center; padding:8px; border-radius:8px;
+  border:1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+}
+.page-item .num { width:46px; height:58px; border-radius:6px; display:grid; place-items:center; background:rgba(255,255,255,0.02); font-weight:700; font-size:14px; color:var(--muted); }
+.page-item .info { flex:1; display:flex; flex-direction:column; gap:4px; }
+.page-item .actions { display:flex; gap:8px; }
+
+/* helper / tiny text */
+.helper { font-size:12px; color:var(--muted); }
+
+/* Footer area within content for big action */
+.cta-row { display:flex; gap:12px; align-items:center; margin-top:10px; justify-content:flex-end; }
+
+/* Progress / result area */
+.result-box {
+  border-radius:10px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,0.03);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+  margin-top:12px;
+}
+.result-list { display:flex; gap:8px; flex-wrap:wrap; }
+
+/* modal */
+.modal-backdrop {
+  position:fixed; left:0; right:0; top:0; bottom:0;
+  background: rgba(2,6,23,0.6);
+  display:none;
+  align-items:center; justify-content:center;
+  z-index:3000;
+}
+.modal-backdrop.show { display:flex; }
+.modal {
+  width:min(820px, 96%);
+  background:linear-gradient(180deg, #041028, #071022);
+  border-radius:14px; padding:18px; border:1px solid rgba(255,255,255,0.03);
+  box-shadow: var(--shadow-2);
+}
+
+/* tiny utilities */
+.text-muted { color:var(--muted); font-size:13px; }
+.kv { font-weight:700; color:var(--accent-2); }
+.flex { display:flex; }
+.flex-col { display:flex; flex-direction:column; }
+.center { display:grid; place-items:center; }
+
+/* big hero / welcome */
+.hero {
+  display:flex; gap:18px; align-items:center; justify-content:space-between;
+  padding:18px; border-radius:12px; margin-bottom:16px;
+  background: linear-gradient(90deg, rgba(110,231,183,0.04), rgba(96,165,250,0.03));
+  border:1px solid rgba(255,255,255,0.02);
+}
+.hero .left { flex:1; }
+.hero h2 { margin:0 0 8px 0; }
+.hero p { margin:0; color:var(--muted); }
+
+/* big illustration placeholders (SVG-friendly) */
+.illustration {
+  width:220px; height:120px; border-radius:12px; display:grid; place-items:center;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.02);
+}
+
+/* responsive tweaks */
+@media (max-width:640px){
+  .brand h1 { font-size:16px; }
+  .logo { width:46px;height:46px; font-size:18px; }
+  .hero { flex-direction:column; gap:12px; align-items:flex-start; }
+  .drop-left .p { max-width:100%;}
+}
+
+/* Extra verbose utilities for future JS interactions (disabled states, busy, success)
+   These are intentionally included so JS can toggle classes like .busy, .success, .error
+*/
+.busy { opacity:0.72; pointer-events:none; filter: blur(0.2px) saturate(0.98); }
+.success { box-shadow: 0 8px 36px rgba(46,204,113,0.06); border-color: rgba(46,204,113,0.12); }
+.error { box-shadow: 0 8px 36px rgba(255,77,77,0.06); border-color: rgba(255,77,77,0.12); }
+
+/* Extensive comment block - for developer: available IDs for JS integration:
+   - #dropzone-images - image -> pdf
+   - #img-files-input - file input for images
+   - #pdf-bg-form - pdf background change form
+   - #pdf-delete-form - pdf page delete form
+   - #pdf-merge-form - merge multiple pdfs
+   - #text2pdf-form - text to pdf
+   - #pdf-split-form - pdf to pages
+   - #results - output area
+   - #modal-preview - modal for previewing result pages
+*/
+
+
+
+
+
+
+
+
+/* ---------- RESPONSIVE FIXES ADDED HERE ---------- */
+
+/* MAIN LAYOUT */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* TABLET & SMALL DESKTOP */
+@media (max-width: 1024px){
+  .layout {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
+/* MOBILE VIEW */
+@media (max-width: 820px){
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: relative;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .nav {
+    align-self: flex-start;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dropzone {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dropzone input[type=file] {
+    width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  textarea {
+    width: 100%;
+  }
+}
+
+/* EXTRA SMALL MOBILE (<=480px) */
+@media (max-width: 480px){
+  .logo {
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+  }
+
+  .brand h1 {
+    font-size: 16px;
+  }
+
+  .btn {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .input,
+  select {
+    width: 100%;
+  }
+
+  .color-swatch {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+
+  .page-item .num {
+    width: 40px;
+    height: 48px;
+    font-size: 12px;
+  }
+}
+
+/* Fix for horizontal overflow on small devices */
+body, html {
+  overflow-x: hidden;
+}
+
+/* Ensure card elements shrink properly */
+.card,
+.tool-card,
+.result-box,
+.dropzone {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Thumbnail area scroll improvement */
+.thumbs {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="page" role="main" aria-labelledby="main-heading">
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="brand" aria-hidden="false">
+      <div class="logo">PT</div>
+      <div>
+        <h1>PDF Toolkit</h1>
+        <p>Images ↔ PDF • Edit • Merge • Split • Convert</p>
+      </div>
+    </div>
+
+    <nav class="nav" aria-label="Primary actions">
+      <button class="btn secondary" id="open-docs">Docs</button>
+      <button class="btn primary" id="start-action">Start</button>
+    </nav>
+  </header>
+
+  <!-- layout -->
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" aria-label="Tools menu">
+      <div class="menu-title">Tools</div>
+      <nav class="menu" role="navigation" aria-label="Tool list">
+        <a href="#tool-images2pdf" class="menu-item" data-tool="images2pdf">
+          <div class="icon">I→P</div>
+          <div class="meta"><div class="title">Image → PDF</div><div class="desc">Ek ya jyaada images ko PDF me convert karein</div></div>
+        </a>
+        <a href="#tool-pdf-bg" class="menu-item" data-tool="pdf-bg">
+          <div class="icon">BG</div>
+          <div class="meta"><div class="title">PDF Background</div><div class="desc">Existing PDF ka background color badlein</div></div>
+        </a>
+        <a href="#tool-delete-pages" class="menu-item" data-tool="delete-pages">
+          <div class="icon">DEL</div>
+          <div class="meta"><div class="title">Delete Pages</div><div class="desc">PDF se pages remove karein (comma separated)</div></div>
+        </a>
+        <a href="#tool-merge" class="menu-item" data-tool="merge">
+          <div class="icon">M</div>
+          <div class="meta"><div class="title">Merge PDFs</div><div class="desc">Multiple PDFs ko ek me combine karein</div></div>
+        </a>
+        <a href="#tool-text2pdf" class="menu-item" data-tool="text2pdf">
+          <div class="icon">T→P</div>
+          <div class="meta"><div class="title">Text → PDF</div><div class="desc">Plain text se PDF banayein</div></div>
+        </a>
+        <a href="#tool-pdf2pages" class="menu-item" data-tool="pdf2pages">
+          <div class="icon">P→Pg</div>
+          <div class="meta"><div class="title">PDF → Pages</div><div class="desc">PDF ko alag-alag images/pages me convert karein</div></div>
+        </a>
+      </nav>
+
+      <div style="height:18px;"></div>
+
+      <div class="menu-title">Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn secondary" id="clear-all">Clear Inputs</button>
+        <button class="btn" id="download-last">Download Last Result</button>
+      </div>
+
+      <div style="height:18px;"></div>
+
+      <div class="menu-title">Tips</div>
+      <p class="helper">Large files might take longer. This UI is ready for JS-backed processing using free PDF APIs (client-side or server-side). Use the start button after selecting files.</p>
+    </aside>
+
+    <!-- Main content -->
+    <main class="content" id="content" role="main">
+      <div class="hero card" aria-hidden="false">
+        <div class="left">
+          <h2 id="main-heading">All-in-one PDF toolkit</h2>
+          <p class="text-muted">Niche operations: images→pdf, change bg, delete pages, merge, text→pdf, pdf→pages. Har tool ke liye detailed UI niche diya gaya hai — JS se connect karne ke liye ready.</p>
+        </div>
+        <div class="illustration center">
+          <!-- Placeholder illustration -->
+          <svg width="160" height="96" viewBox="0 0 160 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="0" y="0" width="160" height="96" rx="10" fill="url(#g)"/>
+            <defs>
+              <linearGradient id="g" x1="0" x2="1">
+                <stop offset="0" stop-color="#60a5fa"/>
+                <stop offset="1" stop-color="#6ee7b7"/>
+              </linearGradient>
+            </defs>
+            <g fill="#021024" fill-opacity="0.08"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Results / output -->
+      <div id="results" class="result-box card" aria-live="polite">
+        <strong>Results</strong>
+        <div class="result-list" id="result-list" style="margin-top:10px;">
+          <!-- JS will append preview tiles & download links here -->
+          <p class="text-muted">Yahan aapke processed files preview aur download links show honge.</p>
+        </div>
+      </div>
+
+      <!-- Tools grid -->
+      <div class="tools-grid" style="margin-top:18px;">
+        <!-- 1. Image to PDF -->
+        <section id="tool-images2pdf" class="tool-card card" aria-labelledby="img2pdf-title">
+          <h3 id="img2pdf-title">1. Image → PDF</h3>
+          <p class="text-muted">Select images (single/multiple). Aap image order set kar sakte hain. Output: single PDF.</p>
+          <div style="height:8px;"></div>
+
+          <div id="dropzone-images" class="dropzone" aria-describedby="img2pdf-desc">
+            <div class="drop-left">
+              <div class="h">Drag & drop images here</div>
+              <div id="img2pdf-desc" class="p">PNG, JPG, JPEG supported. Aap images ka order badal sakte hain after upload. Max file size per image: depends on API limits.</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+              <input id="img-files-input" class="input" type="file" accept="image/*" multiple aria-label="Select image files"/>
+              <button class="btn primary" data-action="convert-images" id="btn-convert-images">Convert to PDF</button>
+            </div>
+          </div>
+
+          <div class="thumbs" id="img-thumbs" aria-hidden="false" style="margin-top:10px;"></div>
+          <p class="helper">Tip: Drag to reorder thumbnails (JS will enable drag-drop reordering).</p>
+        </section>
+
+        <!-- 2. PDF Background change -->
+        <section id="tool-pdf-bg" class="tool-card card" aria-labelledby="pdf-bg-title">
+          <h3 id="pdf-bg-title">2. Change PDF Background</h3>
+          <p class="text-muted">Upload a PDF, phir background color choose karein (white/black/sepia/light/blue). JS will apply the color to each page background.</p>
+
+          <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
+            <input id="pdf-bg-input" class="input" type="file" accept="application/pdf" aria-label="Select PDF to change background"/>
+            <div style="display:flex;flex-direction:column;">
+              <label class="label">Choose background</label>
+              <div class="color-palette" role="radiogroup" aria-label="Background colors">
+                <div class="color-swatch" tabindex="0" data-color="white" title="White">W</div>
+                <div class="color-swatch" tabindex="0" data-color="black" title="Black">B</div>
+                <div class="color-swatch" tabindex="0" data-color="light" title="Light">L</div>
+                <div class="color-swatch" tabindex="0" data-color="sepia" title="Sepia">S</div>
+                <div class="color-swatch" tabindex="0" data-color="blue" title="Blue">Bl</div>
+              </div>
+            </div>
+            <div style="margin-left:auto;">
+              <button id="btn-change-bg" class="btn primary">Apply Background</button>
+            </div>
+          </div>
+
+          <p class="helper" style="margin-top:8px;">Note: Background change can be destructive — JS will offer to preserve original if requested.</p>
+        </section>
+
+        <!-- 3. Delete pages -->
+        <section id="tool-delete-pages" class="tool-card card" aria-labelledby="delete-pages-title">
+          <h3 id="delete-pages-title">3. Delete Pages from PDF</h3>
+          <p class="text-muted">Upload PDF, enter page numbers to remove (comma separated or ranges like 2-4).</p>
+
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input id="pdf-delete-input" class="input" type="file" accept="application/pdf" aria-label="Select PDF to delete pages"/>
+            <div style="flex:1;">
+              <label class="label">Pages to delete</label>
+              <input id="pdf-delete-pages" class="input" type="text" placeholder="e.g. 2,4,7-9" aria-label="Page numbers to delete"/>
+            </div>
+            <div>
+              <button id="btn-delete-pages" class="btn primary">Delete Pages</button>
+            </div>
+          </div>
+
+          <div class="page-list" id="pdf-delete-preview" style="margin-top:10px;">
+            <!-- JS may show page thumbnails & allow selection of pages to delete -->
+            <p class="helper">Preview thumbnails will appear here after upload (JS will extract pages client-side or via API).</p>
+          </div>
+        </section>
+
+        <!-- 4. Merge PDFs -->
+        <section id="tool-merge" class="tool-card card" aria-labelledby="merge-title">
+          <h3 id="merge-title">4. Merge PDFs</h3>
+          <p class="text-muted">Select multiple PDFs and click Merge. Order matters — you can reorder uploaded files.</p>
+
+          <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
+            <input id="pdf-merge-input" class="input" type="file" accept="application/pdf" multiple aria-label="Select PDFs to merge"/>
+            <button id="btn-merge" class="btn primary">Merge PDFs</button>
+          </div>
+
+          <div class="thumbs" id="merge-thumbs" style="margin-top:10px;">
+            <p class="helper">Uploaded PDFs will show here. Drag to reorder (JS).</p>
+          </div>
+        </section>
+
+        <!-- 5. Text to PDF -->
+        <section id="tool-text2pdf" class="tool-card card" aria-labelledby="text2pdf-title">
+          <h3 id="text2pdf-title">5. Text → PDF</h3>
+          <p class="text-muted">Write or paste text, choose page size and font options, then generate PDF.</p>
+
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="flex:1;">
+              <label class="label">Text content</label>
+              <textarea id="text2pdf-content" class="input" rows="8" placeholder="Type or paste text here..."></textarea>
+
+              <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+                <select id="text2pdf-size" class="input small" aria-label="Page size">
+                  <option value="A4">A4</option>
+                  <option value="Letter">Letter</option>
+                  <option value="A5">A5</option>
+                </select>
+                <select id="text2pdf-font" class="input small" aria-label="Font">
+                  <option value="Inter">Inter</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Times">Times New Roman</option>
+                </select>
+                <input id="text2pdf-title" class="input small" placeholder="Document Title (optional)"/>
+                <button id="btn-text2pdf" class="btn primary">Generate PDF</button>
+              </div>
+            </div>
+
+            <div style="width:220px;">
+              <div class="card" style="padding:12px;">
+                <strong>Preview</strong>
+                <p class="text-muted" style="margin-top:8px;">Config: <span class="kv" id="preview-size">A4</span> • Font: <span class="kv" id="preview-font">Inter</span></p>
+                <div style="height:10px;"></div>
+                <div class="illustration center">
+                  <svg width="140" height="90" viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg"><rect rx="8" width="140" height="90" fill="rgba(255,255,255,0.02)" /></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. PDF → Pages -->
+        <section id="tool-pdf2pages" class="tool-card card" aria-labelledby="pdf2pages-title">
+          <h3 id="pdf2pages-title">6. PDF → Pages (extract)</h3>
+          <p class="text-muted">Upload a PDF and convert each page to an image (PNG/JPEG) or download as individual PDFs.</p>
+
+          <div style="display:flex;gap:12px;align-items:center;">
+            <input id="pdf2pages-input" class="input" type="file" accept="application/pdf" aria-label="Select PDF to split into pages"/>
+            <select id="pdf2pages-format" class="input small" aria-label="Output format">
+              <option value="png">PNG (images)</option>
+              <option value="jpeg">JPEG (images)</option>
+              <option value="pdf">Separate PDFs</option>
+            </select>
+            <button id="btn-pdf2pages" class="btn primary">Convert</button>
+          </div>
+
+          <div id="pdf2pages-list" style="margin-top:10px;">
+            <p class="helper">Converted pages will appear as previews with download links.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- Additional helper / logs -->
+      <div style="margin-top:16px;">
+        <div class="card">
+          <strong>Activity log</strong>
+          <div id="activity-log" style="margin-top:8px;color:var(--muted);font-size:13px;">
+            <p>All actions and API responses will be logged here by JS for debugging.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</div>
+
+<!-- Modal template -->
+<div id="modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal" role="document">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 id="modal-title">Preview</h3>
+      <button class="btn" id="modal-close">Close</button>
+    </div>
+    <div id="modal-body" style="margin-top:12px;">
+      <!-- content injected by JS -->
+      <p class="text-muted">Preview content will appear here.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer style="margin-top:18px;text-align:center;color:var(--muted);font-size:13px;">
+  Built by ❤ — SHIVAM KUMAR SRIMT LUCKNOW by AI <br>
+  INSTA ID:- shivam_kumar037s
+</footer>
+
+<!-- Minimal inline helper script (only to enable links to anchor sections; heavy JS will be written after your permission) -->
+<script>
+  // Small accessibility helpers (won't perform any file operations)
+  document.querySelectorAll('.menu-item').forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+  // open modal
+  document.getElementById('modal-close').addEventListener('click', ()=> {
+    document.getElementById('modal').classList.remove('show');
+    document.getElementById('modal').setAttribute('aria-hidden','true');
+  });
+  // open docs button behaviour (placeholder)
+  document.getElementById('open-docs').addEventListener('click', ()=> {
+    alert('Documentation will be available with the JS integration. Proceed to allow JS generation.');
+  });
+</script>
+<script src="script.js"></script>
+</body>
+</html>
