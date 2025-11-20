@@ -286,3 +286,12 @@ document.getElementById("btn-pdf2pages").onclick = async () => {
 
   addResult("PDF → Pages completed.");
 };
+
+
+
+
+
+
+
+
+
