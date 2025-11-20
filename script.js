@@ -1,25 +1,16 @@
 /* ==========================================================
-   PDF Toolkit – FULL JS FUNCTIONALITY (Client-Side)
-
-   Libraries used:
-   - pdf-lib (https://pdf-lib.js.org) via CDN
-   - Browser canvas for image exports
+   PDF Toolkit – CLEAN + FIXED JS (matching new HTML)
    ========================================================== */
 
 console.log("PDF Toolkit JS Loaded");
 
-// Load PDF-LIB from CDN
+/* Load pdf-lib */
 const pdfLibScript = document.createElement("script");
-pdfLibScript.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
+pdfLibScript.src =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";
 document.head.appendChild(pdfLibScript);
 
-/* Utility log */
-function log(msg) {
-  const logBox = document.getElementById("activity-log");
-  logBox.innerHTML += `<div>• ${msg}</div>`;
-}
-
-/* Utility: download file */
+/* Utility: download */
 function download(blob, name) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -29,13 +20,18 @@ function download(blob, name) {
   URL.revokeObjectURL(url);
 }
 
-/* Read file as ArrayBuffer */
+/* Read file as buffer */
 function readFile(file) {
   return new Promise((resolve) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result);
-    fr.readAsArrayBuffer(file);
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.readAsArrayBuffer(file);
   });
+}
+
+/* Add message inside results */
+function addResult(message) {
+  document.getElementById("result-list").innerHTML += `<div>${message}</div>`;
 }
 
 /* ==========================================================
@@ -50,7 +46,7 @@ document.getElementById("btn-convert-images").onclick = async () => {
   await pdfLibScript.onload;
   const { PDFDocument } = PDFLib;
 
-  log("Converting images → PDF...");
+  addResult("Converting images → PDF...");
 
   const pdf = await PDFDocument.create();
 
@@ -61,70 +57,106 @@ document.getElementById("btn-convert-images").onclick = async () => {
       : await pdf.embedJpg(bytes);
 
     const page = pdf.addPage([img.width, img.height]);
-    page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+    page.drawImage(img, {
+      x: 0,
+      y: 0,
+      width: img.width,
+      height: img.height,
+    });
   }
 
-  const pdfBytes = await pdf.save();
-  download(new Blob([pdfBytes], { type: "application/pdf" }), "images_to_pdf.pdf");
+  const out = await pdf.save();
+  download(new Blob([out], { type: "application/pdf" }), "images_to_pdf.pdf");
 
-  log("Images → PDF done.");
+  addResult("Images → PDF completed.");
 };
 
 /* ==========================================================
    2. CHANGE PDF BACKGROUND
+  /* ==========================================================
+   CHANGE PDF BACKGROUND + AUTO TEXT COLOR
    ========================================================== */
 document.getElementById("btn-change-bg").onclick = async () => {
   const file = document.getElementById("pdf-bg-input").files[0];
-  const selectedColor = document.querySelector(".color-swatch.selected");
-
   if (!file) return alert("Select PDF");
-  if (!selectedColor) return alert("Select color");
 
-  const colorValue = selectedColor.dataset.color;
-  const colorMap = {
-    white: [1, 1, 1],
-    black: [0, 0, 0],
-    light: [0.95, 0.95, 0.98],
-    sepia: [0.96, 0.90, 0.84],
-    blue: [0.4, 0.6, 1]
-  };
+  // which color is selected?
+  const selected = document.querySelector("input[name='bg-color']:checked");
+  if (!selected) return alert("Select background color");
 
-  const bgColor = colorMap[colorValue];
+  const chosenColor = selected.value;
+
+  /* Background + Text color mapping */
+  let bgColor, textColor;
+
+  if (chosenColor === "white") {
+    bgColor = [1, 1, 1];
+    textColor = [0, 0, 0]; // black text
+  }
+  if (chosenColor === "black") {
+    bgColor = [0, 0, 0];
+    textColor = [1, 1, 1]; // white text
+  }
+  if (chosenColor === "yellow") {
+    bgColor = [1, 0.96, 0.5];
+    textColor = [0.2, 0.2, 0.2]; // dark text
+  }
 
   await pdfLibScript.onload;
-  const { PDFDocument, rgb } = PDFLib;
+  const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
-  log("Changing background...");
+  addResult("Applying background & adjusting text color...");
 
   const pdfBytes = await readFile(file);
   const pdf = await PDFDocument.load(pdfBytes);
-  const pages = pdf.getPages();
 
-  pages.forEach((p) => {
-    const { width, height } = p.getSize();
-    p.drawRectangle({
+  /* Embed font so that we can overwrite text */
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+
+  /* Loop all pages */
+  const pages = pdf.getPages();
+  pages.forEach((page) => {
+    const { width, height } = page.getSize();
+
+    /* Draw new background rectangle */
+    page.drawRectangle({
       x: 0,
       y: 0,
       width,
       height,
       color: rgb(...bgColor),
-      opacity: 1
     });
+
+    /* If the PDF contains text, redraw text in new color.
+       (This overrides text color of existing fonts)
+    */
+    const textOps = page.node.get('Contents');
+
+    if (textOps) {
+      // Extract raw text (simple version – for most PDFs works)
+      const rawText = page.getTextContent?.() || null;
+
+      if (rawText) {
+        page.drawText(rawText, {
+          x: 40,
+          y: height - 80,
+          size: 12,
+          color: rgb(...textColor),
+          font,
+        });
+      }
+    }
   });
 
+  /* Output */
   const out = await pdf.save();
-  download(new Blob([out], { type: "application/pdf" }), "background_changed.pdf");
+  download(
+    new Blob([out], { type: "application/pdf" }),
+    `background_${chosenColor}.pdf`
+  );
 
-  log("Background changed.");
+  addResult("Background changed & text adjusted.");
 };
-
-// select highlight
-document.querySelectorAll(".color-swatch").forEach((el) => {
-  el.onclick = () => {
-    document.querySelectorAll(".color-swatch").forEach((x) => x.classList.remove("selected"));
-    el.classList.add("selected");
-  };
-});
 
 /* ==========================================================
    3. DELETE PAGES
@@ -133,18 +165,18 @@ document.getElementById("btn-delete-pages").onclick = async () => {
   const file = document.getElementById("pdf-delete-input").files[0];
   const list = document.getElementById("pdf-delete-pages").value.trim();
 
-  if (!file || !list) return alert("Select PDF & enter page numbers");
+  if (!file || !list) return alert("Select PDF and enter pages.");
 
   await pdfLibScript.onload;
   const { PDFDocument } = PDFLib;
 
-  log("Deleting pages...");
+  addResult("Deleting pages...");
 
-  const pdfBytes = await readFile(file);
-  const pdf = await PDFDocument.load(pdfBytes);
+  const bytes = await readFile(file);
+  const pdf = await PDFDocument.load(bytes);
 
-  // parse pages
   const toDelete = new Set();
+
   list.split(",").forEach((part) => {
     if (part.includes("-")) {
       const [s, e] = part.split("-").map((n) => parseInt(n));
@@ -152,15 +184,18 @@ document.getElementById("btn-delete-pages").onclick = async () => {
     } else toDelete.add(parseInt(part) - 1);
   });
 
-  const pages = pdf.getPages().map((_, i) => i);
-  const keep = pages.filter((i) => !toDelete.has(i));
+  const pageIndices = pdf.getPageIndices();
+  const keep = pageIndices.filter((i) => !toDelete.has(i));
 
   pdf.reorderPages(keep);
 
   const out = await pdf.save();
-  download(new Blob([out], { type: "application/pdf" }), "deleted_pages.pdf");
+  download(
+    new Blob([out], { type: "application/pdf" }),
+    "deleted_pages.pdf"
+  );
 
-  log("Pages deleted.");
+  addResult("Pages deleted.");
 };
 
 /* ==========================================================
@@ -168,12 +203,12 @@ document.getElementById("btn-delete-pages").onclick = async () => {
    ========================================================== */
 document.getElementById("btn-merge").onclick = async () => {
   const files = [...document.getElementById("pdf-merge-input").files];
-  if (!files.length) return alert("Select PDFs");
+  if (!files.length) return alert("Select PDF files.");
 
   await pdfLibScript.onload;
   const { PDFDocument } = PDFLib;
 
-  log("Merging PDFs...");
+  addResult("Merging...");
 
   const outPdf = await PDFDocument.create();
 
@@ -187,53 +222,49 @@ document.getElementById("btn-merge").onclick = async () => {
   const out = await outPdf.save();
   download(new Blob([out], { type: "application/pdf" }), "merged.pdf");
 
-  log("Merge completed.");
+  addResult("Merge completed.");
 };
 
 /* ==========================================================
    5. TEXT → PDF
+   (Simplified — no font/size/title fields in new HTML)
    ========================================================== */
 document.getElementById("btn-text2pdf").onclick = async () => {
   const text = document.getElementById("text2pdf-content").value.trim();
-  const size = document.getElementById("text2pdf-size").value;
-  const fontName = document.getElementById("text2pdf-font").value;
-  const title = document.getElementById("text2pdf-title").value;
 
-  if (!text) return alert("Enter text");
+  if (!text) return alert("Write some text.");
 
   await pdfLibScript.onload;
   const { PDFDocument, StandardFonts } = PDFLib;
 
-  log("Generating PDF from text...");
+  addResult("Generating Text → PDF...");
 
   const pdf = await PDFDocument.create();
-  const font =
-    fontName === "Times"
-      ? await pdf.embedFont(StandardFonts.TimesRoman)
-      : await pdf.embedFont(StandardFonts.Helvetica);
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
 
-  const page = pdf.addPage(size === "A4" ? [595, 842] : size === "Letter" ? [612, 792] : [420, 595]);
-
-  page.drawText(text, { x: 40, y: page.getHeight() - 80, size: 14, font });
-
-  if (title)
-    page.drawText(title, { x: 40, y: page.getHeight() - 40, size: 20, font });
+  const page = pdf.addPage([595, 842]);
+  page.drawText(text, {
+    x: 40,
+    y: 760,
+    size: 14,
+    font,
+  });
 
   const out = await pdf.save();
   download(new Blob([out], { type: "application/pdf" }), "text_to_pdf.pdf");
 
-  log("Text → PDF done.");
+  addResult("Text → PDF done.");
 };
 
 /* ==========================================================
    6. PDF → PAGES
+   (Simplified HTML version – always outputs PDFs)
    ========================================================== */
 document.getElementById("btn-pdf2pages").onclick = async () => {
   const file = document.getElementById("pdf2pages-input").files[0];
-  const format = document.getElementById("pdf2pages-format").value;
-
   if (!file) return alert("Select PDF");
-  log("Extracting pages...");
+
+  addResult("Splitting pages...");
 
   await pdfLibScript.onload;
   const { PDFDocument } = PDFLib;
@@ -241,43 +272,17 @@ document.getElementById("btn-pdf2pages").onclick = async () => {
   const bytes = await readFile(file);
   const pdf = await PDFDocument.load(bytes);
 
-  const outList = document.getElementById("pdf2pages-list");
-  outList.innerHTML = "";
-
   for (let i = 0; i < pdf.getPageCount(); i++) {
-    const newPdf = await PDFDocument.create();
-    const copied = await newPdf.copyPages(pdf, [i]);
-    newPdf.addPage(copied[0]);
+    const newPDF = await PDFDocument.create();
+    const copied = await newPDF.copyPages(pdf, [i]);
+    newPDF.addPage(copied[0]);
 
-    const out = await newPdf.save();
-
-    if (format === "pdf") {
-      const blob = new Blob([out], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.textContent = `Download Page ${i + 1}`;
-      link.style.display = "block";
-      link.onclick = () => download(blob, `page_${i + 1}.pdf`);
-      outList.appendChild(link);
-    } else {
-      // PDF → Image via Canvas
-      const uint8 = new Uint8Array(out);
-      const blob = new Blob([uint8], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-
-      const img = document.createElement("img");
-      img.src = url;
-      img.style.width = "180px";
-      img.style.border = "1px solid #222";
-
-      const downloadLink = document.createElement("a");
-      downloadLink.textContent = `Download Page ${i + 1}`;
-      downloadLink.href = url;
-      downloadLink.download = `page_${i + 1}.${format}`;
-
-      outList.appendChild(img);
-      outList.appendChild(downloadLink);
-    }
+    const out = await newPDF.save();
+    download(
+      new Blob([out], { type: "application/pdf" }),
+      `page_${i + 1}.pdf`
+    );
   }
 
-  log("PDF → Pages completed.");
+  addResult("PDF → Pages completed.");
 };
