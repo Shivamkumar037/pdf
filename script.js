@@ -80,82 +80,46 @@ document.getElementById("btn-change-bg").onclick = async () => {
   const file = document.getElementById("pdf-bg-input").files[0];
   if (!file) return alert("Select PDF");
 
-  // which color is selected?
   const selected = document.querySelector("input[name='bg-color']:checked");
   if (!selected) return alert("Select background color");
 
   const chosenColor = selected.value;
 
-  /* Background + Text color mapping */
-  let bgColor, textColor;
-
-  if (chosenColor === "white") {
-    bgColor = [1, 1, 1];
-    textColor = [0, 0, 0]; // black text
-  }
-  if (chosenColor === "black") {
-    bgColor = [0, 0, 0];
-    textColor = [1, 1, 1]; // white text
-  }
-  if (chosenColor === "yellow") {
-    bgColor = [1, 0.96, 0.5];
-    textColor = [0.2, 0.2, 0.2]; // dark text
-  }
+  let bgColor;
+  if (chosenColor === "white") bgColor = [1, 1, 1];
+  if (chosenColor === "black") bgColor = [0, 0, 0];
+  if (chosenColor === "yellow") bgColor = [1, 0.96, 0.5];
 
   await pdfLibScript.onload;
-  const { PDFDocument, rgb, StandardFonts } = PDFLib;
+  const { PDFDocument, rgb } = PDFLib;
 
-  addResult("Applying background & adjusting text color...");
+  addResult("Applying background...");
 
   const pdfBytes = await readFile(file);
   const pdf = await PDFDocument.load(pdfBytes);
 
-  /* Embed font so that we can overwrite text */
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-
-  /* Loop all pages */
   const pages = pdf.getPages();
   pages.forEach((page) => {
     const { width, height } = page.getSize();
 
-    /* Draw new background rectangle */
+    // ✅ Draw semi-transparent background so text/images stay visible
     page.drawRectangle({
       x: 0,
       y: 0,
       width,
       height,
       color: rgb(...bgColor),
+      opacity: 0.3, // Adjust opacity as needed
     });
-
-    /* If the PDF contains text, redraw text in new color.
-       (This overrides text color of existing fonts)
-    */
-    const textOps = page.node.get('Contents');
-
-    if (textOps) {
-      // Extract raw text (simple version – for most PDFs works)
-      const rawText = page.getTextContent?.() || null;
-
-      if (rawText) {
-        page.drawText(rawText, {
-          x: 40,
-          y: height - 80,
-          size: 12,
-          color: rgb(...textColor),
-          font,
-        });
-      }
-    }
   });
 
-  /* Output */
   const out = await pdf.save();
   download(
     new Blob([out], { type: "application/pdf" }),
     `background_${chosenColor}.pdf`
   );
-
-  addResult("Background changed & text adjusted.");
+alert("Download done.")
+  addResult("Background changed successfully.");
 };
 
 /* ==========================================================
