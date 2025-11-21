@@ -215,13 +215,22 @@ body{
       <div class="menu-title">Tools</div>
 
       <nav class="menu">
-        <a href="#" data-tool="images2pdf"><div class="icon">I→P</div>Image → PDF</a>
-        <a href="#" data-tool="pdf-bg"><div class="icon">BG</div>PDF Background</a>
-        <a href="#" data-tool="delete-pages"><div class="icon">DEL</div>Delete Pages</a>
-        <a href="#" data-tool="merge"><div class="icon">M</div>Merge PDFs</a>
-        <a href="#" data-tool="text2pdf"><div class="icon">T→P</div>Text → PDF</a>
-        <a href="#" data-tool="pdf2pages"><div class="icon">P→Pg</div>PDF → Pages</a>
-      </nav>
+       <a href="#" data-tool="images2pdf"><div class="icon">I→P</div>Image → PDF</a>
+<a href="#" data-tool="pdf-bg"><div class="icon">BG</div>PDF Background</a>
+<a href="#" data-tool="delete-pages"><div class="icon">DEL</div>Delete Pages</a>
+<a href="#" data-tool="merge"><div class="icon">M</div>Merge PDFs</a>
+<a href="#" data-tool="text2pdf"><div class="icon">T→P</div>Text → PDF</a>
+<a href="#" data-tool="pdf2pages"><div class="icon">P→Pg</div>PDF → Pages</a>
+<a href="#" data-tool="pdf2text"><div class="icon">P→T</div>PDF → Text</a>
+<a href="#" data-tool="pdf2word"><div class="icon">P→W</div>PDF → Word</a>
+<a href="#" data-tool="word2pdf"><div class="icon">W→P</div>Word → PDF</a>
+<a href="#" data-tool="compress-pdf"><div class="icon">C</div>Compress PDF</a>
+<a href="#" data-tool="rotate-pdf"><div class="icon">R</div>Rotate Pages</a>
+<a href="#" data-tool="watermark"><div class="icon">WM</div>Watermark</a>
+<a href="#" data-tool="metadata"><div class="icon">MD</div>Metadata</a>
+<a href="#" data-tool="pdf-password"><div class="icon">🔒</div>Password Protect</a>
+<a href="#" data-tool="unlock-pdf"><div class="icon">🔓</div>Unlock PDF</a>
+<a href="#" data-tool="reorder-pdf"><div class="icon">↕</div>Reorder Pages</a></nav>
     </aside>
 
     <!-- MAIN CONTENT -->
@@ -333,6 +342,82 @@ body{
         <button id="btn-pdf2pages" class="btn primary">Convert</button>
       </section>
 
+      <section id="tool-pdf2text" class="tool-card hidden">
+  <h3>PDF → Text</h3>
+  <input id="pdf2text-input" type="file" accept="application/pdf">
+  <br><br>
+  <button id="btn-pdf2text" class="btn primary">Extract Text</button>
+</section>
+<section id="tool-pdf2word" class="tool-card hidden">
+  <h3>PDF → Word</h3>
+  <input id="pdf2word-input" type="file" accept="application/pdf">
+  <br><br>
+  <button id="btn-pdf2word" class="btn primary">Convert to Word</button>
+</section>
+<section id="tool-word2pdf" class="tool-card hidden">
+  <h3>Word → PDF</h3>
+  <input id="word2pdf-input" type="file" accept=".doc,.docx">
+  <br><br>
+  <button id="btn-word2pdf" class="btn primary">Convert to PDF</button>
+</section>
+<section id="tool-compress-pdf" class="tool-card hidden">
+  <h3>Compress PDF</h3>
+  <input id="compress-pdf-input" type="file" accept="application/pdf">
+  <br><br>
+  <button id="btn-compress-pdf" class="btn primary">Compress</button>
+</section>
+<section id="tool-rotate-pdf" class="tool-card hidden">
+  <h3>Rotate PDF Pages</h3>
+  <input id="rotate-pdf-input" type="file" accept="application/pdf">
+  <br><br>
+  <label>Rotation:
+    <select id="rotate-angle">
+      <option value="90">90°</option>
+      <option value="180">180°</option>
+      <option value="270">270°</option>
+    </select>
+  </label>
+  <br><br>
+  <button id="btn-rotate-pdf" class="btn primary">Rotate</button>
+</section>
+<section id="tool-watermark" class="tool-card hidden">
+  <h3>Add Watermark</h3>
+  <input id="watermark-pdf-input" type="file" accept="application/pdf">
+  <br><br>
+  <input id="watermark-text" class="input" placeholder="Watermark text">
+  <br><br>
+  <button id="btn-add-watermark" class="btn primary">Apply Watermark</button>
+</section>
+<section id="tool-metadata" class="tool-card hidden">
+  <h3>View PDF Metadata</h3>
+  <input id="metadata-pdf-input" type="file" accept="application/pdf">
+  <br><br>
+  <button id="btn-view-metadata" class="btn primary">View Metadata</button>
+</section>
+<section id="tool-pdf-password" class="tool-card hidden">
+  <h3>Password Protect PDF</h3>
+  <input id="pdf-password-input" type="file" accept="application/pdf">
+  <br><br>
+  <input id="pdf-password" class="input" placeholder="Enter password">
+  <br><br>
+  <button id="btn-set-password" class="btn primary">Protect</button>
+</section>
+<section id="tool-unlock-pdf" class="tool-card hidden">
+  <h3>Unlock PDF</h3>
+  <input id="unlock-pdf-input" type="file" accept="application/pdf">
+  <br><br>
+  <input id="unlock-password" class="input" placeholder="Enter password">
+  <br><br>
+  <button id="btn-unlock-pdf" class="btn primary">Unlock</button>
+</section>
+<section id="tool-reorder-pdf" class="tool-card hidden">
+  <h3>Reorder PDF Pages</h3>
+  <input id="reorder-pdf-input" type="file" accept="application/pdf">
+  <br><br>
+  <input id="reorder-pages" class="input" placeholder="e.g. 3,1,2,5">
+  <br><br>
+  <button id="btn-reorder-pdf" class="btn primary">Reorder</button>
+</section>
     </main>
 
   </div>
